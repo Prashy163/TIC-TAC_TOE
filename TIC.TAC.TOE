@@ -1,0 +1,136 @@
+package tic.tac.toe;
+
+import java.util.*;
+
+public class TicTacToeGame {
+
+    static String[] board;
+    static String currentPlayer;
+    static String playerX;
+    static String playerO;
+
+    static final String RESET = "\u001B[0m";
+    static final String RED = "\u001B[31m";
+    static final String BLUE = "\u001B[34m";
+    static final String GREEN = "\u001B[32m";
+    static final String YELLOW = "\u001B[33m";
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        boolean playAgain;
+
+        System.out.println(YELLOW + "🎮 Welcome to Colorful Tic Tac Toe! 🎮" + RESET);
+        System.out.print("Enter Player 1's name (X): ");
+        playerX = scanner.nextLine();
+        System.out.print("Enter Player 2's name (O): ");
+        playerO = scanner.nextLine();
+
+        do {
+            startNewGame();
+            playGame(scanner);
+            playAgain = askToReplay(scanner);
+        } while (playAgain);
+
+        System.out.println(GREEN + "Thanks for playing! Goodbye 👋" + RESET);
+        scanner.close();
+    }
+
+    static void startNewGame() {
+        board = new String[9];
+        for (int i = 0; i < 9; i++) {
+            board[i] = String.valueOf(i + 1);
+        }
+        currentPlayer = "X";
+    }
+
+    static void playGame(Scanner scanner) {
+        String winner = null;
+
+        printBoard();
+
+        while (winner == null) {
+            String playerName = currentPlayer.equals("X") ? playerX : playerO;
+            System.out.print(BLUE + playerName + "'s turn (" + currentPlayer + "). Choose a slot (1-9): " + RESET);
+
+            int input;
+
+            try {
+                input = scanner.nextInt();
+                if (input < 1 || input > 9) {
+                    System.out.println(RED + "⛔ Invalid input. Choose a number between 1 and 9." + RESET);
+                    continue;
+                }
+            } catch (InputMismatchException e) {
+                System.out.println(RED + "⛔ Please enter a valid number!" + RESET);
+                scanner.next(); // clear bad input
+                continue;
+            }
+
+            if (board[input - 1].equals(String.valueOf(input))) {
+                board[input - 1] = currentPlayer;
+                printBoard();
+                winner = checkWinner();
+
+                if (winner == null) {
+                    currentPlayer = currentPlayer.equals("X") ? "O" : "X";
+                }
+            } else {
+                System.out.println(RED + "🚫 Slot already taken! Try again." + RESET);
+            }
+        }
+
+        announceResult(winner);
+    }
+
+    static void printBoard() {
+        System.out.println(YELLOW + "\nCurrent Board:" + RESET);
+        System.out.println("|---|---|---|");
+        for (int i = 0; i < 9; i += 3) {
+            System.out.println("| " + colorize(board[i]) + " | " + colorize(board[i + 1]) + " | " + colorize(board[i + 2]) + " |");
+            if (i < 6) System.out.println("|-----------|");
+        }
+        System.out.println("|---|---|---|");
+    }
+
+    static String colorize(String val) {
+        if (val.equals("X")) return RED + "X" + RESET;
+        else if (val.equals("O")) return BLUE + "O" + RESET;
+        else return val;
+    }
+
+    static String checkWinner() {
+        int[][] winCombos = {
+            {0, 1, 2}, {3, 4, 5}, {6, 7, 8},
+            {0, 3, 6}, {1, 4, 7}, {2, 5, 8},
+            {0, 4, 8}, {2, 4, 6}
+        };
+
+        for (int[] combo : winCombos) {
+            String line = board[combo[0]] + board[combo[1]] + board[combo[2]];
+            if (line.equals("XXX")) return "X";
+            if (line.equals("OOO")) return "O";
+        }
+
+        for (String cell : board) {
+            if (cell.matches("\\d")) return null;
+        }
+
+        return "draw";
+    }
+
+    static void announceResult(String winner) {
+        if (winner.equals("draw")) {
+            System.out.println(YELLOW + "🤝 It's a draw! Well played both!" + RESET);
+        } else {
+            String winnerName = winner.equals("X") ? playerX : playerO;
+            System.out.println(GREEN + "🎉 Congratulations " + winnerName + "! You won the game as '" + winner + "'!" + RESET);
+        }
+    }
+
+    static boolean askToReplay(Scanner scanner) {
+        System.out.print("\nDo you want to play again? (yes/no): ");
+        scanner.nextLine(); // consume leftover newline
+        String response = scanner.nextLine().toLowerCase();
+        return response.startsWith("y");
+    }
+}
